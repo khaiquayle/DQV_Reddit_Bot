@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 import praw
 from openai import OpenAI
+import time
 load_dotenv()  # Load environment variables from .env
 
 reddit = praw.Reddit(
@@ -18,7 +19,7 @@ client = OpenAI(
 )
 
 
-def fetch_new_posts(subreddit_name, limit=5):
+def fetch_new_posts(subreddit_name, limit=20):
     """
     Fetch the newest posts from a subreddit.
     Returns a list of praw.models.Submission objects.
@@ -101,7 +102,7 @@ def main():
     except FileNotFoundError:
         replied_to_ids = set()
 
-    posts = fetch_new_posts(subreddit_name, limit=5)
+    posts = fetch_new_posts(subreddit_name, limit=20)
     if not posts:
         print("No new posts found.")
         return
@@ -140,5 +141,28 @@ def get_hot_posts(subreddit_name, limit=10):
 
 
 
+def run_bot_five_times():
+    """
+    Runs the bot 5 times with a 10-minute sleep between iterations.
+    """
+    for iteration in range(5):
+        try:
+            print(f"Starting bot iteration {iteration + 1}/5...")
+            main()
+            if iteration < 4:  # Don't sleep after the last iteration
+                print("Bot iteration completed. Sleeping for 10 minutes...")
+                time.sleep(600)  # Sleep for 10 minutes (600 seconds)
+            else:
+                print("Bot completed all 5 iterations.")
+        except KeyboardInterrupt:
+            print("Bot stopped by user.")
+            break
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            if iteration < 4:  # Don't sleep after the last iteration
+                print("Sleeping for 10 minutes before retrying...")
+                time.sleep(600)
+
+
 if __name__ == '__main__':
-    main() 
+    run_bot_five_times() 
